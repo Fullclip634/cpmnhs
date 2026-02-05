@@ -1,53 +1,53 @@
-import { useNavigate, Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
-import { useVoting } from '@/contexts/VotingContext';
-import schoolLogo from '@/assets/school-logo.jpg';
-import { 
-  Vote, 
-  Users, 
-  BarChart3, 
-  Shield, 
-  CheckCircle, 
-  Clock,
-  ArrowRight,
-  Star
-} from 'lucide-react';
-
-const Index = () => {
-  const navigate = useNavigate();
-  const { election, isLoggedIn, user } = useVoting();
-
-  const features = [
-    {
-      icon: Vote,
-      title: 'Secure Voting',
-      description: 'Cast your vote securely with our encrypted voting system ensuring privacy and integrity.',
-    },
-    {
-      icon: Users,
-      title: 'Fair Elections',
-      description: 'Every student gets one vote, ensuring a democratic and fair election process.',
-    },
-    {
-      icon: BarChart3,
-      title: 'Real-time Results',
-      description: 'View live election results as votes are counted in real-time.',
-    },
-    {
-      icon: Shield,
-      title: 'Verified Voters',
-      description: 'Only registered students can vote, preventing fraud and duplicate voting.',
-    },
-  ];
-
-  const stats = [
-    { value: election?.totalVoters || 500, label: 'Registered Voters' },
-    { value: election?.totalVoted || 277, label: 'Votes Cast' },
-    { value: '6', label: 'Positions' },
-    { value: '12', label: 'Candidates' },
-  ];
+ import { useNavigate, Link } from 'react-router-dom';
+ import { Button } from '@/components/ui/button';
+ import { Header } from '@/components/Header';
+ import { Footer } from '@/components/Footer';
+ import { useVoting } from '@/contexts/VotingContext';
+ import schoolLogo from '@/assets/school-logo.jpg';
+ import { 
+   Vote, 
+   Users, 
+   BarChart3, 
+   Shield, 
+   CheckCircle, 
+   Clock,
+   ArrowRight,
+   Star
+ } from 'lucide-react';
+ 
+ const Index = () => {
+   const navigate = useNavigate();
+   const { election, isLoggedIn, user, stats, positions, candidates } = useVoting();
+ 
+   const features = [
+     {
+       icon: Vote,
+       title: 'Secure Voting',
+       description: 'Cast your vote securely with our encrypted voting system ensuring privacy and integrity.',
+     },
+     {
+       icon: Users,
+       title: 'Fair Elections',
+       description: 'Every student gets one vote, ensuring a democratic and fair election process.',
+     },
+     {
+       icon: BarChart3,
+       title: 'Real-time Results',
+       description: 'View live election results as votes are counted in real-time.',
+     },
+     {
+       icon: Shield,
+       title: 'Verified Voters',
+       description: 'Only registered students can vote, preventing fraud and duplicate voting.',
+     },
+   ];
+ 
+   const displayStats = [
+     { value: stats?.totalVoters || 0, label: 'Registered Voters' },
+     { value: stats?.totalVoted || 0, label: 'Votes Cast' },
+     { value: positions.length, label: 'Positions' },
+     { value: candidates.length, label: 'Candidates' },
+   ];
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -95,7 +95,7 @@ const Index = () => {
                       <Button 
                         variant="hero" 
                         size="xl"
-                        onClick={() => navigate('/login')}
+                        onClick={() => navigate('/auth')}
                         className="bg-accent hover:bg-accent/90 text-accent-foreground"
                       >
                         Vote Now
@@ -133,7 +133,7 @@ const Index = () => {
         <section className="py-12 bg-card border-y border-border">
           <div className="container mx-auto px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {stats.map((stat, index) => (
+              {displayStats.map((stat, index) => (
                 <div 
                   key={index} 
                   className="text-center animate-fade-in"
@@ -152,7 +152,7 @@ const Index = () => {
         </section>
 
         {/* Election Status */}
-        {election && (
+        {election && stats && (
           <section className="py-16 bg-background">
             <div className="container mx-auto px-4">
               <div className="max-w-4xl mx-auto">
@@ -179,7 +179,7 @@ const Index = () => {
                       <Button 
                         variant="hero" 
                         size="lg"
-                        onClick={() => navigate('/login')}
+                        onClick={() => navigate('/auth')}
                       >
                         Start Voting
                         <ArrowRight className="h-4 w-4" />
@@ -192,17 +192,17 @@ const Index = () => {
                     <div className="flex justify-between text-sm mb-2">
                       <span className="text-muted-foreground">Voter Turnout</span>
                       <span className="font-semibold text-foreground">
-                        {Math.round((election.totalVoted / election.totalVoters) * 100)}%
+                        {stats.participationRate}%
                       </span>
                     </div>
                     <div className="h-3 bg-muted rounded-full overflow-hidden">
                       <div 
                         className="h-full gradient-primary rounded-full transition-all duration-1000"
-                        style={{ width: `${(election.totalVoted / election.totalVoters) * 100}%` }}
+                        style={{ width: `${stats.participationRate}%` }}
                       />
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">
-                      {election.totalVoted} of {election.totalVoters} students have voted
+                      {stats.totalVoted} of {stats.totalVoters} students have voted
                     </p>
                   </div>
                 </div>
@@ -259,7 +259,7 @@ const Index = () => {
                 <Button 
                   variant="hero" 
                   size="xl"
-                  onClick={() => navigate('/login')}
+                  onClick={() => navigate('/auth')}
                 >
                   Cast Your Vote Now
                   <ArrowRight className="h-5 w-5" />

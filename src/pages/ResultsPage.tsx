@@ -1,16 +1,26 @@
-import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
-import { CandidateCard } from '@/components/CandidateCard';
-import { useVoting } from '@/contexts/VotingContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { BarChart3, Trophy, Users, Vote } from 'lucide-react';
-
-export default function ResultsPage() {
-  const { election, getResults, candidates } = useVoting();
-  const results = getResults();
-
-  const totalVotes = candidates.reduce((sum, c) => sum + c.votes, 0);
+ import { Header } from '@/components/Header';
+ import { Footer } from '@/components/Footer';
+ import { CandidateCard } from '@/components/CandidateCard';
+ import { useVoting } from '@/contexts/VotingContext';
+ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+ import { Progress } from '@/components/ui/progress';
+ import { BarChart3, Trophy, Users, Vote, Loader2 } from 'lucide-react';
+ 
+ export default function ResultsPage() {
+   const { election, getResults, stats, isLoading } = useVoting();
+   const results = getResults();
+ 
+   if (isLoading) {
+     return (
+       <div className="min-h-screen flex flex-col bg-background">
+         <Header />
+         <main className="flex-1 flex items-center justify-center">
+           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+         </main>
+         <Footer />
+       </div>
+     );
+   }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -37,14 +47,14 @@ export default function ResultsPage() {
             <Card className="glass-card">
               <CardContent className="pt-6 text-center">
                 <Users className="h-8 w-8 text-primary mx-auto mb-2" />
-                <p className="text-3xl font-bold text-foreground">{election?.totalVoters}</p>
+                <p className="text-3xl font-bold text-foreground">{stats?.totalVoters || 0}</p>
                 <p className="text-sm text-muted-foreground">Registered Voters</p>
               </CardContent>
             </Card>
             <Card className="glass-card">
               <CardContent className="pt-6 text-center">
                 <Vote className="h-8 w-8 text-success mx-auto mb-2" />
-                <p className="text-3xl font-bold text-foreground">{election?.totalVoted}</p>
+                <p className="text-3xl font-bold text-foreground">{stats?.totalVoted || 0}</p>
                 <p className="text-sm text-muted-foreground">Votes Cast</p>
               </CardContent>
             </Card>
@@ -52,16 +62,20 @@ export default function ResultsPage() {
               <CardContent className="pt-6 text-center">
                 <Trophy className="h-8 w-8 text-accent mx-auto mb-2" />
                 <p className="text-3xl font-bold text-foreground">
-                  {election ? Math.round((election.totalVoted / election.totalVoters) * 100) : 0}%
+                  {stats?.participationRate || 0}%
                 </p>
                 <p className="text-sm text-muted-foreground">Voter Turnout</p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Results by Position */}
-          <div className="space-y-12">
-            {results.map(({ position, candidates: positionCandidates }, positionIndex) => {
+          {results.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No results available yet. Check back after voting begins!</p>
+            </div>
+          ) : (
+            <div className="space-y-12">
+              {results.map(({ position, candidates: positionCandidates }, positionIndex) => {
               const positionTotalVotes = positionCandidates.reduce((sum, c) => sum + c.votes, 0);
               const winner = positionCandidates[0];
               
@@ -144,9 +158,10 @@ export default function ResultsPage() {
                     ))}
                   </div>
                 </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </main>
 
