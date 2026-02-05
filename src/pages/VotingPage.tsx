@@ -1,31 +1,50 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
-import { CandidateCard } from '@/components/CandidateCard';
-import { Button } from '@/components/ui/button';
-import { useVoting } from '@/contexts/VotingContext';
-import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Vote, CheckCircle, ArrowRight, ArrowLeft, Send } from 'lucide-react';
+ import { useState, useEffect } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { Header } from '@/components/Header';
+ import { Footer } from '@/components/Footer';
+ import { CandidateCard } from '@/components/CandidateCard';
+ import { Button } from '@/components/ui/button';
+ import { useVoting } from '@/contexts/VotingContext';
+ import { useToast } from '@/hooks/use-toast';
+ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+ import {
+   AlertDialog,
+   AlertDialogAction,
+   AlertDialogCancel,
+   AlertDialogContent,
+   AlertDialogDescription,
+   AlertDialogFooter,
+   AlertDialogHeader,
+   AlertDialogTitle,
+ } from '@/components/ui/alert-dialog';
+ import { Vote, CheckCircle, ArrowRight, ArrowLeft, Send, Loader2 } from 'lucide-react';
 
 export default function VotingPage() {
-  const { candidates, positions, votes, setVote, submitVotes, hasVoted, isLoggedIn, user } = useVoting();
+   const { candidates, positions, votes, setVote, submitVotes, hasVoted, isLoggedIn, user, isLoading } = useVoting();
   const [currentPositionIndex, setCurrentPositionIndex] = useState(0);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!isLoading && !isLoggedIn) {
+      navigate('/auth');
+    }
+  }, [isLoading, isLoggedIn, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   // Redirect if not logged in or not a voter
   if (!isLoggedIn || user?.role !== 'voter') {
@@ -40,7 +59,7 @@ export default function VotingPage() {
               <p className="text-muted-foreground mb-6">
                 Please login as a student to cast your vote.
               </p>
-              <Button variant="hero" onClick={() => navigate('/login')}>
+              <Button variant="hero" onClick={() => navigate('/auth')}>
                 Go to Login
               </Button>
             </CardContent>
@@ -82,8 +101,31 @@ export default function VotingPage() {
     );
   }
 
+  if (positions.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <main className="flex-1 flex items-center justify-center p-4">
+          <Card className="glass-card max-w-md w-full text-center p-8">
+            <CardContent className="pt-6">
+              <Vote className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h2 className="font-display text-2xl font-bold mb-2">No Active Election</h2>
+              <p className="text-muted-foreground mb-6">
+                There is no active election at this time. Please check back later.
+              </p>
+              <Button variant="hero" onClick={() => navigate('/')}>
+                Return Home
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   const currentPosition = positions[currentPositionIndex];
-  const positionCandidates = candidates.filter(c => c.position === currentPosition.id);
+  const positionCandidates = candidates.filter(c => c.positionId === currentPosition.id);
   const selectedCandidate = votes[currentPosition.id];
   const allPositionsVoted = positions.every(p => votes[p.id]);
 

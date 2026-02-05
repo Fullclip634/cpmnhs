@@ -1,84 +1,103 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useVoting } from '@/contexts/VotingContext';
-import { 
-  Users, 
-  Vote, 
-  BarChart3, 
-  Settings, 
-  UserPlus, 
-  FileText,
-  Clock,
-  CheckCircle,
-  TrendingUp,
-  Shield
-} from 'lucide-react';
-
-export default function AdminDashboard() {
-  const { user, isLoggedIn, election, candidates, positions, getResults } = useVoting();
-  const navigate = useNavigate();
-
-  // Redirect if not admin
-  if (!isLoggedIn || user?.role !== 'admin') {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <main className="flex-1 flex items-center justify-center p-4">
-          <Card className="glass-card max-w-md w-full text-center p-8">
-            <CardContent className="pt-6">
-              <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h2 className="font-display text-2xl font-bold mb-2">Access Denied</h2>
-              <p className="text-muted-foreground mb-6">
-                You need admin privileges to access this page.
-              </p>
-              <Button variant="hero" onClick={() => navigate('/admin-login')}>
-                Admin Login
-              </Button>
-            </CardContent>
-          </Card>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  const results = getResults();
-  const voterTurnout = election ? Math.round((election.totalVoted / election.totalVoters) * 100) : 0;
-
-  const stats = [
-    {
-      title: 'Total Voters',
-      value: election?.totalVoters || 0,
-      icon: Users,
-      color: 'text-primary',
-      bgColor: 'bg-primary/10',
-    },
-    {
-      title: 'Votes Cast',
-      value: election?.totalVoted || 0,
-      icon: Vote,
-      color: 'text-success',
-      bgColor: 'bg-success/10',
-    },
-    {
-      title: 'Voter Turnout',
-      value: `${voterTurnout}%`,
-      icon: TrendingUp,
-      color: 'text-accent',
-      bgColor: 'bg-accent/10',
-    },
-    {
-      title: 'Positions',
-      value: positions.length,
-      icon: FileText,
-      color: 'text-secondary-foreground',
-      bgColor: 'bg-secondary',
-    },
-  ];
+ import { useState, useEffect } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import { Header } from '@/components/Header';
+ import { Footer } from '@/components/Footer';
+ import { Button } from '@/components/ui/button';
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+ import { useVoting } from '@/contexts/VotingContext';
+ import { 
+   Users, 
+   Vote, 
+   BarChart3, 
+   Settings, 
+   UserPlus, 
+   FileText,
+   Clock,
+   CheckCircle,
+   TrendingUp,
+   Shield,
+   Loader2
+ } from 'lucide-react';
+ 
+ export default function AdminDashboard() {
+   const { user, isLoggedIn, election, candidates, positions, getResults, stats, isLoading } = useVoting();
+   const navigate = useNavigate();
+ 
+   useEffect(() => {
+     if (!isLoading && !isLoggedIn) {
+       navigate('/auth');
+     }
+   }, [isLoading, isLoggedIn, navigate]);
+ 
+   if (isLoading) {
+     return (
+       <div className="min-h-screen flex flex-col bg-background">
+         <Header />
+         <main className="flex-1 flex items-center justify-center">
+           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+         </main>
+         <Footer />
+       </div>
+     );
+   }
+ 
+   // Redirect if not admin
+   if (!isLoggedIn || user?.role !== 'admin') {
+     return (
+       <div className="min-h-screen flex flex-col bg-background">
+         <Header />
+         <main className="flex-1 flex items-center justify-center p-4">
+           <Card className="glass-card max-w-md w-full text-center p-8">
+             <CardContent className="pt-6">
+               <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+               <h2 className="font-display text-2xl font-bold mb-2">Access Denied</h2>
+               <p className="text-muted-foreground mb-6">
+                 You need admin privileges to access this page.
+               </p>
+               <Button variant="hero" onClick={() => navigate('/auth')}>
+                 Admin Login
+               </Button>
+             </CardContent>
+           </Card>
+         </main>
+         <Footer />
+       </div>
+     );
+   }
+ 
+   const results = getResults();
+   const voterTurnout = stats?.participationRate || 0;
+ 
+   const displayStats = [
+     {
+       title: 'Total Voters',
+       value: stats?.totalVoters || 0,
+       icon: Users,
+       color: 'text-primary',
+       bgColor: 'bg-primary/10',
+     },
+     {
+       title: 'Votes Cast',
+       value: stats?.totalVoted || 0,
+       icon: Vote,
+       color: 'text-success',
+       bgColor: 'bg-success/10',
+     },
+     {
+       title: 'Voter Turnout',
+       value: `${voterTurnout}%`,
+       icon: TrendingUp,
+       color: 'text-accent',
+       bgColor: 'bg-accent/10',
+     },
+     {
+       title: 'Positions',
+       value: positions.length,
+       icon: FileText,
+       color: 'text-secondary-foreground',
+       bgColor: 'bg-secondary',
+     },
+   ];
 
   const actions = [
     {
@@ -153,7 +172,7 @@ export default function AdminDashboard() {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {stats.map((stat, index) => (
+            {displayStats.map((stat, index) => (
               <Card 
                 key={index} 
                 className="glass-card animate-fade-in"

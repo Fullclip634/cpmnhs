@@ -1,19 +1,19 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useVoting } from '@/contexts/VotingContext';
-import { Button } from '@/components/ui/button';
-import schoolLogo from '@/assets/school-logo.jpg';
-import { LogOut, User, Menu, X } from 'lucide-react';
-import { useState } from 'react';
-
-export function Header() {
-  const { user, isLoggedIn, logout } = useVoting();
-  const navigate = useNavigate();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
+ import { Link, useNavigate } from 'react-router-dom';
+ import { useVoting } from '@/contexts/VotingContext';
+ import { Button } from '@/components/ui/button';
+ import schoolLogo from '@/assets/school-logo.jpg';
+ import { LogOut, User, Menu, X } from 'lucide-react';
+ import { useState } from 'react';
+ 
+ export function Header() {
+   const { user, isLoggedIn, signOut } = useVoting();
+   const navigate = useNavigate();
+   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+ 
+   const handleLogout = async () => {
+     await signOut();
+     navigate('/');
+   };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-card/95 backdrop-blur-xl supports-[backdrop-filter]:bg-card/80">
